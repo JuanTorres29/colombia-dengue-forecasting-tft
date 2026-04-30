@@ -47,15 +47,17 @@ from public sources:
 | Municipal population (Censo 2018) | DANE |
 | Gravitational connectivity flow (`Flujo_in`) | Computed from population + centroids |
 
-The full panel is **not** redistributed in this repository because some
-intermediate processing steps depend on access credentials to external
-portals. A **small stratified sample of 50 municipalities** is provided
-under `data/final_dataset_sample.csv` so that the entire pipeline can be
-executed end-to-end as a reproducibility check.
+The full dataset is publicly available on Kaggle:
 
-If you want to run on the full panel, replace `data/final_dataset_sample.csv`
-with `data/final_dataset.csv` and update `DATA_PATH` at the top of the
-notebook.
+👉 https://www.kaggle.com/datasets/juantorr/dengue-and-climate-data-colombia-20102024
+
+A **small stratified sample of 50 municipalities** is included in this
+repository under `data/final_dataset_sample.csv` to ensure the pipeline can
+be executed quickly end-to-end.
+
+To run the full experiment, download the dataset from Kaggle and replace
+`data/final_dataset_sample.csv` with `data/final_dataset.csv`, then update
+`DATA_PATH` at the top of the notebook.
 
 ### Required columns of the input CSV
 
