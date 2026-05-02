@@ -23,13 +23,15 @@ Transformer (TFT)" (Pontificia Universidad Javeriana, 2026).
 The main notebook has two cells:
 
 1. **Pipeline cell** — full training and evaluation pipeline:
-   - light cross-validation on TFT (validation folds 2021, 2022, 2023)
-   - two-stage hyperparameter tuning on the 2023 fold
+   - two-stage hyperparameter tuning on the 2023 validation fold
      - Stage 1: architecture search (`hidden_size × attention_head_size`)
      - Stage 2: loss-weight search (`w_zero × w_pos × w_outbreak`)
+   - light cross-validation (folds 2021, 2022, 2023) using the selected
+     configuration to choose the median number of training epochs
    - final test on 2024 with all four models (TFT, NAIVE, ARIMA, LSTM)
-2. **Anticipation fix cell** — post-hoc correction of the lead-time metric
-   in the comparison Excel.
+2. **Interpretability cell** — variable importance and attention analysis on
+   the trained TFT (variable selection networks, temporal attention,
+   per-regime breakdowns, Excel workbook with sheets A–K).
 
 ## Dataset
 
@@ -55,9 +57,11 @@ A **small stratified sample of 50 municipalities** is included in this
 repository under `data/final_dataset_sample.csv` to ensure the pipeline can
 be executed quickly end-to-end.
 
-To run the full experiment, download the dataset from Kaggle and replace
-`data/final_dataset_sample.csv` with `data/final_dataset.csv`, then update
-`DATA_PATH` at the top of the notebook.
+The notebook is configured to use the sample by default, so it runs
+end-to-end after a fresh clone. To reproduce the full experiment, download
+`final_dataset.csv` from the Kaggle link above, place it under `data/`, and
+change the `DATA_PATH` line at the top of the pipeline cell from
+`final_dataset_sample.csv` to `final_dataset.csv`.
 
 ### Required columns of the input CSV
 
@@ -95,39 +99,42 @@ cd notebooks
 jupyter notebook dengue_forecasting.ipynb
 ```
 
-Then execute the two cells in order. By default, results land under
-`../results/` relative to the notebook, with the following structure:
+Run the cells in order: the pipeline cell first, and the interpretability
+cell once it has finished. By default, results land under `../results/`
+relative to the notebook, with the following structure:
 
 ```
 results/
+├── tuning/
+│   └── _tuning_tft_2023/
+│       ├── arch_*/...                # Stage-1 architecture trials
+│       ├── weights_*/...             # Stage-2 weight trials
+│       ├── best_architecture.json
+│       ├── best_config.json
+│       └── tuning_results.csv
 ├── cv/
-│   ├── fold_val_2021/<model>/...
-│   ├── fold_val_2022/<model>/...
-│   ├── fold_val_2023/<model>/...
-│   ├── _tuning_tft_2023/
-│   │   ├── arch_*/...           # Stage-1 architecture trials
-│   │   ├── weights_*/...        # Stage-2 weight trials
-│   │   ├── best_architecture.json
-│   │   ├── best_config.json
-│   │   └── tuning_results.csv
-│   └── cv_summary_report.xlsx
-└── final_test/
-    └── final_test_2024/
-        ├── tft/   naive/   arima/   lstm/
-        ├── final_test_2024_comparison_report.xlsx
-        └── final_test_2024_comparison_report_CORREGIDO.xlsx
+│   ├── fold_val_2021/tft/...
+│   ├── fold_val_2022/tft/...
+│   ├── fold_val_2023/tft/...
+│   └── _CV_SUMMARY.json              # median selected epochs
+├── final_test/
+│   └── final_test_2024/
+│       ├── tft/   naive/   arima/   lstm/
+│       ├── final_test_2024_comparison_report.xlsx
+│       └── tft/interp_artifacts/     # inputs for the interpretability cell
+└── interp_manifest_pointer.json
 ```
 
 The pipeline supports **resume**: if it is interrupted, re-running the
-cell skips trials that already finished (their results are persisted as
-JSON inside their trial folders).
+cell skips trials and folds that already finished (their results are
+persisted as JSON inside their respective folders).
 
 ## Reproducibility notes
 
 - A single global random seed (`SEED = 42`) is set at the top of the
   pipeline. Lightning's `seed_everything(SEED, workers=True)` is also
   invoked.
-- The 2024 test year is held out from every step of CV and tuning.
+- The 2024 test year is held out from every step of tuning and CV.
 - Hyperparameter search is driven by a composite score documented in the
   `_score_tft_trial` function; the final selection is persisted in
   `best_config.json`.
@@ -138,8 +145,13 @@ If you use this code, please cite the thesis:
 
 > Torres Contreras, J. A. (2026). *Predicción de casos de dengue en
 > Colombia mediante Temporal Fusion Transformer (TFT)*. Undergraduate
-> thesis, Pontificia Universidad Javeriana, Departamento de Matemáticas,
-> Programa Ciencia de Datos.
+> thesis, Pontificia Universidad Javeriana, Programa Ciencia de Datos.
+
+## License
+
+This code is released for academic and research purposes. Underlying
+SIVIGILA, IDEAM, MODIS, NOAA, and DANE data are subject to the terms of
+their respective providers.
 
 ## License
 
